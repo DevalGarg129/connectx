@@ -7,6 +7,7 @@ import { Server } from "socket.io";
 import mongoose from "mongoose";
 import { connectToSocket } from "./controllers/socketManager.js";
 import cors from "cors";
+
 import userRoutes from "./routes/users.routes.js";
 
 const app = express();
@@ -22,6 +23,7 @@ app.use(express.json({ limit: "40kb" }));
 app.use(express.urlencoded({ limit: "40kb", extended: true }));
 
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/users", meetingRoutes);
 
 console.log(PORT);
 console.log(process.env.JWT_SECRET);
