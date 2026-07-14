@@ -7,25 +7,18 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import { AuthContext } from '../contexts/AuthContext';
 
 function HomeComponent() {
-
-
     let navigate = useNavigate();
     const [meetingCode, setMeetingCode] = useState("");
-
 
     const {addToUserHistory} = useContext(AuthContext);
     let handleJoinVideoCall = async () => {
         await addToUserHistory(meetingCode)
         navigate(`/${meetingCode}`)
     }
-
     return (
         <>
-
             <div className="navBar">
-
                 <div style={{ display: "flex", alignItems: "center" }}>
-
                     <h2>Apna Video Call</h2>
                 </div>
 

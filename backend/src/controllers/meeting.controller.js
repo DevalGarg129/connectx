@@ -16,17 +16,18 @@ export const createMeeting = async (req, res) => {
             startedAt: new Date()
         });
 
-        return res.status().json({ 
+        return res.status(201).json({ 
             success: true, 
             message: "Meeting Created Successfully ", 
             data: meeting
         });
 
     }catch(error){
-        console.log(`Error getting while creating the Meeting : ${error.message}`);
+        console.error(`Error getting while creating the Meeting : ${error.message}`);
         return res.status(500).json({ 
             success: false, 
-            message: error.message
+            message: error.message,
+            stack: error.stack
         });
     }
 }

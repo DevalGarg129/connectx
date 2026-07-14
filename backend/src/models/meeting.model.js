@@ -1,9 +1,9 @@
-import mongoose, { Schema } from "Schema";
+import mongoose, { Schema } from "mongoose";
 
 const meetingSchema = new Schema(
   {
     //meeting id
-    meeting_id: {
+    meetingCode: {
       type: String,
       required: true,
       unique: true,
@@ -26,7 +26,7 @@ const meetingSchema = new Schema(
     participants: [
       {
         type: Schema.Types.ObjectId,
-        ref: "user",
+        ref: "User",
       },
     ],
 
