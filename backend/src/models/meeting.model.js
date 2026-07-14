@@ -1,13 +1,56 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema } from "Schema";
 
 const meetingSchema = new Schema(
   {
-    user_id: { type: String },
-    meetingCode: { type: String, required: true },
-    date: { type: Date, default: Date.now, required: true },
-  }
+    //meeting id
+    meeting_id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
+    //title
+    title: {
+      type: String,
+      default: "untitled Meeting",
+    },
+
+    //host
+    host: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    //Participants
+    participants: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
+
+    //Check if is Active or Not
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    //Meeting Start time
+    startedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    //Meeting end time
+    endedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  },
 );
 
-const Meeting = mongoose.model("Meeting", meetingSchema);
-
-export { Meeting };
+export const Meeting = mongoose.model("Meeting", meetingSchema);
