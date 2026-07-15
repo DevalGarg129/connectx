@@ -1,12 +1,8 @@
 import crypto from "crypto";
-import { Meeting } from "../models/meeting.model";
-import { Room } from "../models/room.model";
+import { Meeting } from "../models/meeting.model.js";
+import { Room } from "../models/room.model.js";
 import httpStatus from "http-status";
-
-//Code for Generating RandomId
-const generateRoomId = () => {
-    return crypto.randomBytes(4).toString("hex").toUpperCase();
-};
+import generateRoomId from "../utils/roomIdGenerator.js";
 
 //Controller for Creating Room
 export const createRoom = async (req, res) => {
@@ -156,7 +152,7 @@ export const leaveRoom = async (req, res) => {
 export const getRoom = async(req, res) => {
     try{
         const room = await Room.findOne({
-            roomId = req.params.roomId
+            roomId: req.params.roomId
         })
         .populate("host", "name email")
         .populate("participant.user", "name email")
@@ -279,7 +275,7 @@ export const endRoom = async(req, res) => {
 export const deleteRoom = async (req, res) => {
     try{
         const room = await Room.findOne({
-            roomId = req.params.roomId
+            roomId: req.params.roomId
         });
 
         if(!room){

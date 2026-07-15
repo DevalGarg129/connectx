@@ -10,9 +10,12 @@ import { connectToSocket } from "./controllers/socketManager.js";
 
 import userRoutes from "./routes/users.routes.js";
 import meetingRoutes from "./routes/meeting.routes.js";
+import roomRoutes from "./routes/room.routes.js";
 
 import { User } from "./models/user.model.js";
 import { Meeting } from "./models/meeting.model.js";
+
+import errorHandler from "./middlewares/error.middleware.js";
 
 const app = express();
 const server = createServer(app);
@@ -29,6 +32,7 @@ app.use(express.urlencoded({ extended: true, limit: "40kb" }));
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/meetings", meetingRoutes);
+app.use("/api/v1/rooms/", roomRoutes);
 
 console.log(PORT);
 console.log(process.env.JWT_SECRET);
@@ -39,9 +43,7 @@ const start = async () => {
 
         console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`);
 
-        // -------------------------------
         // Remove old indexes (run once)
-        // -------------------------------
         try {
             await mongoose.connection.collection("users").dropIndex("email_1");
             console.log("Dropped old email_1 index");
@@ -56,9 +58,7 @@ const start = async () => {
             console.log("meeting_id_1 index not found");
         }
 
-        // -------------------------------
         // Create indexes from schema
-        // -------------------------------
         await User.syncIndexes();
         await Meeting.syncIndexes();
 
@@ -73,4 +73,5 @@ const start = async () => {
     }
 };
 
+app.use(errorHandler);
 start();

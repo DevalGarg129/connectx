@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "Schema";
+import mongoose, { Schema } from "mongoose";
 
 //Schema of Participants 
 const participantSchema = new Schema({
@@ -14,7 +14,7 @@ const participantSchema = new Schema({
     },
     joinedAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now
     },
     leftAt: {
         type: Date,
@@ -82,15 +82,15 @@ const roomSettingsSchema = new Schema({
         type: Boolean,
         default: false
     },
-    allowParticipantstoUnmute: {
+    allowParticipantsToUnmute: {
         type: Boolean,
         default: true
     },
-    allowParticipantstoRename: {
+    allowParticipantsToRename: {
         type: Boolean,
         default: true
     },
-    allowParticipantstoShareVideo: {
+    allowParticipantsToShareVideo: {
         type: Boolean,
         default: true
     },
@@ -121,7 +121,7 @@ const roomSchema = new Schema({
     },
     description: {
         type: String,
-        default: " ",
+        default: "",
         trim: true
     },
     host: {
@@ -148,22 +148,31 @@ const roomSchema = new Schema({
         default: null
     },
     endedAt: {
-        type: Boolean,
+        type: Date,
         default: null
     },
-    meetingduration: {
+    meetingDuration: {
         type: Number,
         default: 0
     },
-    participants: {
+    participantsCount: {
         type: Number,
         default: 1
     },
     isDeleted: {
-        Type: Boolean,
+        type: Boolean,
         default: false
+    },
+    settings: {
+        type: roomSettingsSchema,
+        default: () => ({})
     }
 }, { timestamps: true });
+
+
+roomSchema.index({ roomId: 1 });
+roomSchema.index({ host: 1 });
+roomSchema.index({ status: 1 });
 
 //Exporting the models
 export const Room = mongoose.model("Room", roomSchema);
