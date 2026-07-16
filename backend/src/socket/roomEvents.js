@@ -29,9 +29,11 @@ const registerRoomEvents = (io, socket) => {
             }
             socket.join(roomId);
 
-            socket.roomId = roomId;
-            socket.userId = userId;
-            socket.username = username;
+            socket.data = {
+                roomId,
+                userId,
+                username,
+            };
 
             roomManager.addUser(roomId, socket, {
                 userId,
@@ -39,7 +41,6 @@ const registerRoomEvents = (io, socket) => {
             });
 
             const participants = roomManager.getUsers(roomId);
-
             socket.emit(SOCKET_EVENTS.ROOM_USERS, participants);
 
             //notify everyone except sender 

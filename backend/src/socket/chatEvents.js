@@ -1,9 +1,48 @@
-// send-message
+import { SOCKET_EVENTS } from "./socketEvents.js";
+import socketAsyncHandler from "./socketAsyncHandler.js";
 
-// edit-message
+const broadcast = (socket, event, payload = {}) => {
+    socket.to(socket.data.roomId).emit(event, {
+        socketId: socket.id,
+        userId: socket.data.userId,
+        username: socket.data.username,
+        timestamp: Date.now(),
+        ...payload
+    });
+};
 
-// delete-message
+const registerChatEvents = (io, socket) => {
+    //Chat Message
+    socket.on(
+        SOCKET_EVENTS.CHAT_MESSAGE,
+        socketAsyncHandler(async ({ message }) => {
+            broadcast(
+                socket,
+                SOCKET_EVENTS.CHAT_MESSAGE,
+                { message }
+            );
+        })         
+    );
 
-// typing
+    //Typing
+    socket.on(
+        SOCKET_EVENTS.TYPING,
+        socketAsyncHandler(async () => {
+            broadcast(
+                socket,
+                SOCKET_EVENTS.TYPING
+            );
+        })
+    );
 
-// stop-typing
+    //Stop Typing
+    socket.on(
+        SOCKET_EVENTS.STOP_TYPING,
+        socketAsyncHandler(async () => {
+            broadcast(
+                socket,
+                SOCKET_EVENTS.STOP_TYPING
+            );
+        })
+    )
+}

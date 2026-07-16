@@ -20,45 +20,40 @@
 
 // Register Chat Events
 import { Server } from "socket.io";
+import { SOCKET_EVENTS } from "./socketEvents.js";
+
 import socketAsyncHandler from "./socketAsyncHandler";
+import registerRoomEvents from "./roomEvents.js";
+import registerSignalingEvents from "./signalingEvents.js";
+import registerMediaEvents from "./mediaEvents.js";
+import registerChatEvents from "./chatEvents.js";
 
 const activeRooms = new Map();
+let io = null;
+
 const initializeSocket = (httpServer) => {
     const io = new Server(httpServer, {
         cors: {
-            origin: "*",
-            methods: ["GET", "POST"]
+            origin: process.env.CLIENT_URL || "*",
+            methods: ["GET", "POST"],
+            credentials: true
         }
     });
 
-    io.on("Connection", (socket) => {
+    io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
         console.log(`Socket Connected: ${socket.id}`);
-        socket.io("disconnect", () => {
-            console.log('Socket disconnected : ${socket.id}');
-        });
-
+        
         //Join room
-        // socket.io("join-room", socketAsyncHandler(async({ roomId, userId })) => {
-        //     const room = await Room.findOne({ roomId });
-        // });
-        //leave-room
+        registerRoomEvents(io, socket);
 
-        //offer
+        registerSignalingEvents(io, socket);
 
-        //answer
+        registerChatEvents(io, socket);
 
-        //ice-candidate
-
-        //chat
-
-        //screen-share
-
-        //mute
-
-        //disconnect
+        registerMediaEvents(io, socket);
     });
-
     return io;
 };
 
 export default initializeSocket;
+export { io };

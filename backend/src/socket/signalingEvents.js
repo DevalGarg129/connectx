@@ -1,5 +1,52 @@
-// offer
+import socketAsyncHandler from "../socket/socketAsyncHandler.js";
+import { SOCKET_EVENTS } from "./socketEvents";
 
-// answer
+const registerSignalingEvents = (io, socket) => {
+    //Offer
+    socket.io(
+        SOCKET_EVENTS.OFFER,
+        socketAsyncHandler(async (data) => {
+            const { targetSocketId, offer } = data;
+            io.to("targetSocketId").emit(
+                SOCKET_EVENTS.OFFER,{
+                    offer,
+                    from: socket.id,
+                    userId: socket.data.userId,
+                    username: socket.data.username
+                }
+            )
+        })
+    )
 
-// ice-candidate
+    //answer
+    socket.io(
+        SOCKET_EVENTS.ANSWER,
+        socketAsyncHandler(async (data) => {
+            const { targetSocketId, answer } = data;
+            io.to(targetSocketId).emit(
+                SOCKET_EVENTS.ANSWER,{
+                    answer,
+                    from: socket.id,
+                    userId: socket.data.userId,
+                    username: socket.data.username
+                }
+            )
+        })
+    );
+
+    //Ice Candidate
+    socket.io(
+        SOCKET_EVENTS.ICE_CANDIDATE,
+        socketAsyncHandler(async (data) => {
+            const { targetSocketId, candidate } = data;
+            io.to(targetSocketId).emit(
+                SOCKET_EVENTS.ICE_CANDIDATE,{
+                    candidate,
+                    from: socket.id
+                }
+            )
+        })
+    );
+};
+//Ques why SocketIds instead of userId
+export default registerSignalingEvents;

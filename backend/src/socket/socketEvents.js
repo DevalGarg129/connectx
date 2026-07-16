@@ -24,6 +24,7 @@ export const SOCKET_EVENTS = {
     SCREEN_SHARE_START: "screen-share-start",
     SCREEN_SHARE_STOP: "screen-share-stop",
     RAISE_HAND: "raise-hand",
+    LOWER_HAND: "lower-hand",
 
     //chat message
     CHAT_MESSAGE: "chat-message",

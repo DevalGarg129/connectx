@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
+import http from "http";
 import { createServer } from "node:http";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -17,9 +18,12 @@ import { Meeting } from "./models/meeting.model.js";
 
 import errorHandler from "./middlewares/error.middleware.js";
 
+import initializeSocket from "./socket/socketManager.js";
+
 const app = express();
-const server = createServer(app);
+const server = http.createServer(app);
 connectToSocket(server);
+initializeSocket(server);
 
 const MONGO_URI = "mongodb+srv://tradelocker:tradelocker123@cluster0.xpkmjlk.mongodb.net/";
 const PORT = process.env.PORT || 8000;
@@ -64,7 +68,7 @@ const start = async () => {
 
         console.log("Indexes synchronized successfully");
 
-        server.listen(app.get("port"), () => {
+        server.listen(PORT, () => {
             console.log(`Listening On Port ${PORT}`);
         });
 

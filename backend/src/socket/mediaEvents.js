@@ -1,13 +1,80 @@
-// mute
+import { SOCKET_EVENTS } from "./socketEvents.js";
+import socketAsyncHandler from "./socketAsyncHandler.js";
 
-// unmute
+const broadcast = (socket, event, extra = {}) => {
+    socket.to(socket.data.roomId).emit(event, {
+        socketId: socket.id,
+        userId: socket.data.userId,
+        username: socket.data.username,
+        ...extra
+    });
+};
 
-// video-on
+//Neccessary Media Events
+const registerMediaEvents = (io, socket) => {
+    //mute
+    socket.on(
+        SOCKET_EVENTS.MUTE,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.MUTE)
+        })
+    );
 
-// video-off
+    //unmute
+    socket.on(
+        SOCKET_EVENTS.UNMUTE,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.UNMUTE);
+        })
+    );
 
-// screen-share-start
+    //video on
+    socket.on(
+        SOCKET_EVENTS.VIDEO_ON,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.VIDEO_ON);
+        })
+    );
 
-// screen-share-stop
+    //video off
+    socket.on(
+        SOCKET_EVENTS.VIDEO_OFF, 
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.VIDEO_OFF);
+        })
+    );
 
-// raise-hand
+    //screen share start
+    socket.on(
+        SOCKET_EVENTS.SCREEN_SHARE_START,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.SCREEN_SHARE_START);
+        })
+    );
+
+    //screen share stop
+    socket.on(
+        SOCKET_EVENTS.SCREEN_SHARE_STOP,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.SCREEN_SHARE_STOP);
+        })
+    );
+
+    //raise hand
+    socket.on(
+        SOCKET_EVENTS.RAISE_HAND,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.RAISE_HAND);
+        })
+    );
+
+    //lower hand
+    socket.on(
+        SOCKET_EVENTS.LOWER_HAND,
+        socketAsyncHandler(async, () => {
+            broadcast(socket, SOCKET_EVENTS.LOWER_HAND);
+        })
+    );
+};
+
+export default registerMediaEvents;
