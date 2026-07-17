@@ -1,5 +1,5 @@
 import socketAsyncHandler from "../socket/socketAsyncHandler.js";
-import { SOCKET_EVENTS } from "./socketEvents";
+import { SOCKET_EVENTS } from "./socketEvents.js";
 
 const registerSignalingEvents = (io, socket) => {
     //Offer

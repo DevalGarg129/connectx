@@ -3,11 +3,8 @@ dotenv.config();
 
 import express from "express";
 import http from "http";
-import { createServer } from "node:http";
 import mongoose from "mongoose";
 import cors from "cors";
-
-import { connectToSocket } from "./controllers/socketManager.js";
 
 import userRoutes from "./routes/users.routes.js";
 import meetingRoutes from "./routes/meeting.routes.js";
@@ -22,7 +19,7 @@ import initializeSocket from "./socket/socketManager.js";
 
 const app = express();
 const server = http.createServer(app);
-connectToSocket(server);
+
 initializeSocket(server);
 
 const MONGO_URI = "mongodb+srv://tradelocker:tradelocker123@cluster0.xpkmjlk.mongodb.net/";
@@ -36,7 +33,7 @@ app.use(express.urlencoded({ extended: true, limit: "40kb" }));
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/meetings", meetingRoutes);
-app.use("/api/v1/rooms/", roomRoutes);
+app.use("/api/v1/rooms", roomRoutes);
 
 console.log(PORT);
 console.log(process.env.JWT_SECRET);

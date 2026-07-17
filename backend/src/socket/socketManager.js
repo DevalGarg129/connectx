@@ -22,7 +22,7 @@
 import { Server } from "socket.io";
 import { SOCKET_EVENTS } from "./socketEvents.js";
 
-import socketAsyncHandler from "./socketAsyncHandler";
+import socketAsyncHandler from "./socketAsyncHandler.js";
 import registerRoomEvents from "./roomEvents.js";
 import registerSignalingEvents from "./signalingEvents.js";
 import registerMediaEvents from "./mediaEvents.js";

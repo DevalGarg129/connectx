@@ -1,9 +1,11 @@
 const socketAsyncHandler = (handler) => {
     return async (...args) => {
-        try{
+        try {
             await handler(...args);
-        }catch(error){
-            console.error("Socket Error : ", error);
+        } catch (error) {
+            console.error("Socket Error:", error);
         }
-    }
+    };
 };
+
+export default socketAsyncHandler;

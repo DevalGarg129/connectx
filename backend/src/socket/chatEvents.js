@@ -45,4 +45,6 @@ const registerChatEvents = (io, socket) => {
             );
         })
     )
-}
+};
+
+export default registerChatEvents;
