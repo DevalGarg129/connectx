@@ -1,98 +1,119 @@
-import axios from "axios";
-import httpStatus from "http-status";
-import { createContext, useContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import server from "../environment";
 
+import {
+    register,
+    login,
+    getHistory,
+    addHistory,
+} from "../services/auth.service";
+
+import {
+    TOKEN_KEY,
+    USER_KEY,
+} from "../config/constants";
 
 export const AuthContext = createContext({});
 
-const client = axios.create({
-    baseURL: `${server}/api/v1/users`
-})
-
-
 export const AuthProvider = ({ children }) => {
 
-    const authContext = useContext(AuthContext);
+    const navigate = useNavigate();
 
+    const [userData, setUserData] = useState(null);
 
-    const [userData, setUserData] = useState(authContext);
+    const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
 
-    const router = useNavigate();
+        const user = localStorage.getItem(USER_KEY);
+
+        if (user) {
+            setUserData(JSON.parse(user));
+        }
+
+        setLoading(false);
+
+    }, []);
 
     const handleRegister = async (name, username, password) => {
-        try {
-            let request = await client.post("/register", {
-                name: name,
-                username: username,
-                password: password
-            })
 
+        return await register(name, username, password);
 
-            if (request.status === httpStatus.CREATED) {
-                return request.data.message;
-            }
-        } catch (err) {
-            throw err;
-        }
-    }
+    };
 
     const handleLogin = async (username, password) => {
-        try {
-            let request = await client.post("/login", {
-                username: username,
-                password: password
-            });
 
-            console.log(username, password)
-            console.log(request.data)
+        const data = await login(username, password);
 
-            if (request.status === httpStatus.OK) {
-                localStorage.setItem("token", request.data.token);
-                router("/home")
-            }
-        } catch (err) {
-            throw err;
+        localStorage.setItem(TOKEN_KEY, data.token);
+
+        if (data.user) {
+
+            localStorage.setItem(
+                USER_KEY,
+                JSON.stringify(data.user)
+            );
+
+            setUserData(data.user);
+
         }
-    }
+
+        navigate("/home");
+
+        return data;
+
+    };
+
+    const handleLogout = () => {
+
+        localStorage.removeItem(TOKEN_KEY);
+
+        localStorage.removeItem(USER_KEY);
+
+        setUserData(null);
+
+        navigate("/");
+
+    };
 
     const getHistoryOfUser = async () => {
-        try {
-            let request = await client.get("/get_all_activity", {
-                params: {
-                    token: localStorage.getItem("token")
-                }
-            });
-            return request.data
-        } catch
-         (err) {
-            throw err;
-        }
-    }
+
+        return await getHistory();
+
+    };
 
     const addToUserHistory = async (meetingCode) => {
-        try {
-            let request = await client.post("/add_to_activity", {
-                token: localStorage.getItem("token"),
-                meeting_code: meetingCode
-            });
-            return request
-        } catch (e) {
-            throw e;
-        }
-    }
 
+        return await addHistory(meetingCode);
 
-    const data = {
-        userData, setUserData, addToUserHistory, getHistoryOfUser, handleRegister, handleLogin
-    }
+    };
+
+    const value = {
+
+        userData,
+
+        loading,
+
+        handleLogin,
+
+        handleLogout,
+
+        handleRegister,
+
+        getHistoryOfUser,
+
+        addToUserHistory,
+
+    };
 
     return (
-        <AuthContext.Provider value={data}>
-            {children}
-        </AuthContext.Provider>
-    )
 
-}
+        <AuthContext.Provider value={value}>
+
+            {children}
+
+        </AuthContext.Provider>
+
+    );
+
+};
