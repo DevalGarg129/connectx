@@ -1,6 +1,6 @@
 //Required Modules
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 //Imported Files
 import socket from '../socket/socket';
@@ -256,6 +256,20 @@ export default function VideoMeet(){
             }
         };
 
+        const cleanupMeeting =  () => {
+            if(localStreamRef.current){
+                localStreamRef.current
+                    .getTracks()
+                    .forEach(track => track.stop());
+            }
+
+            Objects.values(peerConnectionsRef.current)
+                .forEach(pc => pc.close());
+
+            peerConnectionsRef.current = {};
+            socket.disconnect();
+        };
+
         //sockets handling for events
         socket.on(SOCKET_EVENTS.ROOM_USERS, handleUsers);
         socket.on(SOCKET_EVENTS.USER_JOINED, handleJoined);
@@ -278,9 +292,42 @@ export default function VideoMeet(){
                 .forEach(pc => pc.close());
 
             peerConnectionsRef.current = {};
+            cleanupMeeting();
             socket.disconnect();
         };
     }, []);
+
+    const leaveMeeting = () => {
+        try{
+            console.log("Leaving the Meeting....");
+
+            //stop local media
+            if(localStreamRef.current){
+                localStreamRef.current
+                    .getTracks()
+                    .forEach(track => track.stop());
+            }
+
+            //close peer connnection
+            Object.values(peerConnectionsRef.current)
+                .forEach(pc => pc.close());
+
+            peerConnectionsRef.current = {};
+
+            //clear participants;
+            setParticipants([]);
+
+            //clear remote streams
+            setRemoteStreams([]);
+
+            socket.emit(SOCKET_EVENTS.LEAVE_ROOM);
+            cleanupMeeting();
+            socket.disconnect();
+            navigate("/");
+        }catch(error){
+            console.log("Error : ", message);
+        }
+    };
 
     const toggleMicrophone = () => {
         if(!localStreamRef.current) return;
@@ -289,6 +336,24 @@ export default function VideoMeet(){
         if(!audioTrack) return;
         audioTrack.enabled = !audioTrack.enabled;
         setIsMicOn(audioTrack.enabled);
+    };
+
+    const toggleCamera = () => {
+        if(!localStreamRef.current) return;
+        
+        const videoTrack = localStreamRef.current.getVideoTracks()[0];
+        if(!videoTrack) return;
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsCameraOn(videoTrack.enabled);
+    };
+
+    const toggleChat = () => {
+        if(!localStreamRef.current) return;
+
+        const chatTrack = localStreamRef.current.getChatTracks()[0];
+        if(!chatTrack) return;
+        chatTrack.enabled = !chatTrack.enabled;
+        setIsChatOpen(chatTrack.enabled);
     };
 
     return (
@@ -327,13 +392,15 @@ export default function VideoMeet(){
                 <button onClick={toggleMicrophone}>
                     {isMicOn ? "Mic On" : "Mic Off"}
                 </button>
-                <button>
+                <button onClick={toggleCamera}>
                     {isCameraOn ? "Camera On" : "Camera Off"}
                 </button>
-                <button>
+                <button onClick={toggleChat}>
                     {isChatOpen ? "Chat is Open" : "Chat is Off"}
                 </button>
-                <button>Leave</button>
+                <button onClick={leaveMeeting}>
+                    Leave
+                </button>
             </footer>
         </div>
     )
