@@ -254,7 +254,8 @@ export default function VideoMeet(){
             }catch(error){
                 console.error("Error : ", error);
             }
-        }
+        };
+
         //sockets handling for events
         socket.on(SOCKET_EVENTS.ROOM_USERS, handleUsers);
         socket.on(SOCKET_EVENTS.USER_JOINED, handleJoined);
@@ -280,6 +281,15 @@ export default function VideoMeet(){
             socket.disconnect();
         };
     }, []);
+
+    const toggleMicrophone = () => {
+        if(!localStreamRef.current) return;
+
+        const audioTrack = localStreamRef.current.getAudioTracks()[0];
+        if(!audioTrack) return;
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMicOn(audioTrack.enabled);
+    };
 
     return (
         <div className={styles.meetingContainer}>
@@ -314,7 +324,7 @@ export default function VideoMeet(){
             />
 
             <footer className={styles.toolbar}>
-                <button>
+                <button onClick={toggleMicrophone}>
                     {isMicOn ? "Mic On" : "Mic Off"}
                 </button>
                 <button>
