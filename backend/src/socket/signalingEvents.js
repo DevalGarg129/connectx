@@ -3,11 +3,11 @@ import { SOCKET_EVENTS } from "./socketEvents.js";
 
 const registerSignalingEvents = (io, socket) => {
     //Offer
-    socket.io(
+    socket.on(
         SOCKET_EVENTS.OFFER,
         socketAsyncHandler(async (data) => {
             const { targetSocketId, offer } = data;
-            io.to("targetSocketId").emit(
+            io.to(targetSocketId).emit(
                 SOCKET_EVENTS.OFFER,{
                     offer,
                     from: socket.id,
@@ -19,7 +19,7 @@ const registerSignalingEvents = (io, socket) => {
     )
 
     //answer
-    socket.io(
+    socket.on(
         SOCKET_EVENTS.ANSWER,
         socketAsyncHandler(async (data) => {
             const { targetSocketId, answer } = data;
@@ -35,7 +35,7 @@ const registerSignalingEvents = (io, socket) => {
     );
 
     //Ice Candidate
-    socket.io(
+    socket.on(
         SOCKET_EVENTS.ICE_CANDIDATE,
         socketAsyncHandler(async (data) => {
             const { targetSocketId, candidate } = data;

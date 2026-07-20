@@ -4,8 +4,8 @@ const configuration = {
     },],
 };
 
-export const peerConnection = () => {
+export const createPeerConnection = () => {
     return new RTCPeerConnection(configuration);
 };
-
-export default configuration;
+//not to store peerConnection is react state because RTCPeerConnection is mutable and shouldnt trigger re-renders.  
+export default createPeerConnection;

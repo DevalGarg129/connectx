@@ -1,11 +1,11 @@
 //Required Modules
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from "react-router-dom";
-import httpStatus from "http-status";
 
 //Imported Files
 import socket from '../socket/socket';
 import { SOCKET_EVENTS } from '../socket/socketEvents';
+import createPeerConnection from '../socket/peerConnection';
 
 //styles
 import styles from "../styles/videoComponent.module.css";
@@ -18,8 +18,15 @@ export default function VideoMeet(){
     const [isCameraOn, setIsCameraOn] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(true);
 
-    const roomId = useParams();
+    const { roomId } = useParams();
+    const localVideoRef = useRef(null);
+    const localStreamRef = useRef(null);
+    const peerConnectionsRef = useRef({});
 
+    const user = {
+        id: "123",
+        username: "Deval"
+    };
     //function for starting the local Stream
     const startLocalStream = async () => {
         try{
@@ -28,25 +35,37 @@ export default function VideoMeet(){
                 audio: true
             });
             localStreamRef.current = stream;
-            if(localStreamRef.current){
-                localStreamRef.current.srcObject = stream;
+            if(localVideoRef.current){
+                localVideoRef.current.srcObject = stream;
             }
         }catch(error){
             console.error(`Failed to connect : ${error}`);
-            return res.status(500).json({
-                message: error.message
-            })
         }
+    };
+
+    //Function for creating Peer
+    const createPeer = (socketId) => {
+        if(peerConnectionsRef.current[socketId]){
+            return peerConnectionsRef.current[socketId];
+        }
+        const pc = createPeerConnection();
+        peerConnectionsRef.current[socketId] = pc;
+        localStreamRef.current?.getTracks().forEach(track => {
+            pc.addTrack(track, localStreamRef.current);
+        });
+        console.log("Peer Created : ", socketId);
+        return pc;
     };
 
     useEffect(() => {
         startLocalStream();
         return () => {
             if(localStreamRef.current){
-                localStreamRef.current.getTracks().forEach(track => track.stop());
+                localStreamRef.current
+                    .getTracks()
+                    .forEach(track => track.stop());
             }
         };
-        socket.connect();
     }, []);
 
     //Use Effect for the Socket Events
@@ -59,34 +78,71 @@ export default function VideoMeet(){
             username:user.username
         });
 
-        const handleUsers = (users) => {};
-        const handleJoined = (user) => {};
-        const handleLeft = ({socketId}) => {};
+        const handleUsers = (users) => {
+            setParticipants(users);
+            users.forEach((user) => {
+                if(user.socketId !== socket.id){
+                    createPeer(user.socketId);
+                }
+            });
+            console.log("Participants : ", users);
+        };
+
+        const handleJoined = (user) => {
+            setParticipants(prev => [...prev, user]);
+            createPeer(user.socketId);
+        };
+
+        const handleLeft = ({ socketId }) => {
+            peerConnectionsRef.current[socketId]?.close();
+            delete peerConnectionsRef.current[socketId];
+            setParticipants(prev => 
+                prev.filter(user => user.socketId !== socketId)
+            );
+        };
 
         //sockets handling for events
         socket.on(SOCKET_EVENTS.ROOM_USERS, handleUsers);
-        socket.on(SOCKET_EVENTS.JOIN_ROOM, handleJoined);
-        socket.on(SOCKET_EVENTS.LEAVE_ROOM, handleLeft);
+        socket.on(SOCKET_EVENTS.USER_JOINED, handleJoined);
+        socket.on(SOCKET_EVENTS.USER_LEFT, handleLeft);
 
         return () => {
-            socket.emit(SOCKET_EVENTS, LEAVE_ROOM);
+            socket.emit(SOCKET_EVENTS.LEAVE_ROOM);
 
-            socket.off(SOCKET_EVENTS, ROOM_USERS, handleUsers);
-            socket.off(SOCKET_EVENTS, USERS_JOINED, handleJoined);
-            socket.off(SOCKET_EVENTS, USERS_LEFT, handleLeft);
+            socket.off(SOCKET_EVENTS.ROOM_USERS, handleUsers);
+            socket.off(SOCKET_EVENTS.USERS_JOINED, handleJoined);
+            socket.off(SOCKET_EVENTS.USERS_LEFT, handleLeft);
+
+            Object.values(peerConnectionRef.current)
+                .forEach(pc => pc.close());
+
+            peerConnectionsRef.current = {};
+            socket.disconnect();
         };
     }, []);
+
     return (
         <div className={styles.meetingContainer}>
-            <header>
+            <header className={styles.header}>
                 <h2>ConnectX</h2>
                 <span>Meeting</span>
             </header>
 
             <main className={styles.videoGrid}>
-                <div className={styles.emptyMeeting}>
-                    Waiting for the Participants
-                </div>
+                {participants.length === 0 ? (
+                    <div className={styles.emptyMeeting}>
+                        Waiting for the Participants.....
+                    </div>
+                ) : (
+                    participants.map((participant) => (
+                        <div
+                            key={participant.socketId}
+                            className={styles.participantCard}
+                        >
+                            {participant.username}
+                        </div>
+                    ))
+                )};
             </main>
 
             <video
@@ -98,9 +154,15 @@ export default function VideoMeet(){
             />
 
             <footer className={styles.toolbar}>
-                <button>Mic</button>
-                <button>Camera</button>
-                <button>Chat</button>
+                <button>
+                    {isMicOn ? "Mic On" : "Mic Off"}
+                </button>
+                <button>
+                    {isCameraOn ? "Camera On" : "Camera Off"}
+                </button>
+                <button>
+                    {isChatOpen ? "Chat is Open" : "Chat is Off"}
+                </button>
                 <button>Leave</button>
             </footer>
         </div>
