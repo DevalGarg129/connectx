@@ -54,6 +54,20 @@ export default function VideoMeet(){
             pc.addTrack(track, localStreamRef.current);
         });
         console.log("Peer Created : ", socketId);
+
+        //Peer Events
+        pc.onicecandidate = (event) => {
+            console.log("ICE Candidate Generated");
+        };
+
+        pc.ontrack = (event) => {
+            console.log("Remote Track Received");
+        };
+
+        pc.onconnectionstatechange = () => {
+            console.log(pc.connectionState);
+        };
+
         return pc;
     };
 
@@ -88,9 +102,10 @@ export default function VideoMeet(){
             console.log("Participants : ", users);
         };
 
-        const handleJoined = (user) => {
+        const handleJoined = async (user) => {
             setParticipants(prev => [...prev, user]);
             createPeer(user.socketId);
+            await createOffer(user.socketId);
         };
 
         const handleLeft = ({ socketId }) => {
@@ -101,10 +116,59 @@ export default function VideoMeet(){
             );
         };
 
+        const createOffer = async ( targetSocketId ) => {
+            try{
+                const pc = peerConnectionsRef.current[targetSocketId];
+                if(!pc){
+                    console.error("Peer Connection Not Found");
+                    return;
+                }
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit(SOCKET_EVENTS.OFFER, {
+                    targetSocketId,
+                    offer
+                });
+                console.log("Offer Sent to : ", targetSocketId);
+            }catch(error){
+                console.error("Error : ", error.message);
+            }
+        };
+
+        const createAnswer = async (targetSocketId, offer) => {
+            try{
+                let pc = peerConnectionsRef.current[targetSocketId];
+                if(!pc){
+                    pc = createPeer(targetSocketId);
+                }
+
+                await pc.setRemoteDescription(
+                    new RTCSessionDescription(offer)
+                );
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                socket.emit(SOCKET_EVENTS.ANSWER, {
+                    targetSocketId,
+                    answer
+                });
+                console.log("Answer sent : ", targetSocketId);
+            }catch(error){
+                console.error('Create Answer Error : ', error);
+            }
+        };
+
+        const handleOffer = async (data) => {
+            const { offer, from } = data;
+            console.log("Offer Received from : ", from);
+            await createAnswer(from, offer);
+        };
+
         //sockets handling for events
         socket.on(SOCKET_EVENTS.ROOM_USERS, handleUsers);
         socket.on(SOCKET_EVENTS.USER_JOINED, handleJoined);
         socket.on(SOCKET_EVENTS.USER_LEFT, handleLeft);
+        socket.on(SOCKET_EVENTS.OFFER, handleOffer);
 
         return () => {
             socket.emit(SOCKET_EVENTS.LEAVE_ROOM);
@@ -112,8 +176,9 @@ export default function VideoMeet(){
             socket.off(SOCKET_EVENTS.ROOM_USERS, handleUsers);
             socket.off(SOCKET_EVENTS.USERS_JOINED, handleJoined);
             socket.off(SOCKET_EVENTS.USERS_LEFT, handleLeft);
+            socket.off(SOCKET_EVENTS.OFFER, handleOffer);
 
-            Object.values(peerConnectionRef.current)
+            Object.values(peerConnectionsRef.current)
                 .forEach(pc => pc.close());
 
             peerConnectionsRef.current = {};
