@@ -32,7 +32,7 @@ const activeRooms = new Map();
 let io = null;
 
 const initializeSocket = (httpServer) => {
-    const io = new Server(httpServer, {
+    io = new Server(httpServer, {
         cors: {
             origin: process.env.CLIENT_URL || "*",
             methods: ["GET", "POST"],

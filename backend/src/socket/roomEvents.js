@@ -4,7 +4,8 @@ import socketAsyncHandler from "../socket/socketAsyncHandler.js";
 
 //function for handloing duplicates
 const removeParticipant = (socket) => {
-    const roomId = socket.roomId;
+    const roomId = socket.data?.roomId;
+    const userId = socket.data?.userId;
     if(!roomId) return;
 
     roomManager.removeUser(roomId, socket.id);
@@ -12,7 +13,7 @@ const removeParticipant = (socket) => {
     socket.to(roomId).emit(
         SOCKET_EVENTS.USER_LEFT,{
             socketId: socket.id,
-            userId: socket.userId
+            userId
         }
     );
 };

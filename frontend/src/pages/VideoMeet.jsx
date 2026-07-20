@@ -1,12 +1,24 @@
+//Required Modules
 import { useState, useEffect, useRef } from 'react';
-import styles from "../styles/videoComponent.module.css";
+import { useParams } from "react-router-dom";
 import httpStatus from "http-status";
 
+//Imported Files
+import socket from '../socket/socket';
+import { SOCKET_EVENTS } from '../socket/socketEvents';
+
+//styles
+import styles from "../styles/videoComponent.module.css";
+
+//Main video meet function
 export default function VideoMeet(){
+    //States
     const [participants, setParticipants] = useState([]);
     const [isMicOn, setIsMicOn] = useState(true);
     const [isCameraOn, setIsCameraOn] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(true);
+
+    const roomId = useParams();
 
     //function for starting the local Stream
     const startLocalStream = async () => {
@@ -34,8 +46,36 @@ export default function VideoMeet(){
                 localStreamRef.current.getTracks().forEach(track => track.stop());
             }
         };
+        socket.connect();
     }, []);
 
+    //Use Effect for the Socket Events
+    useEffect(() => {
+        socket.connect();
+
+        socket.emit(SOCKET_EVENTS.JOIN_ROOM, {
+            roomId,
+            userId:user.id,
+            username:user.username
+        });
+
+        const handleUsers = (users) => {};
+        const handleJoined = (user) => {};
+        const handleLeft = ({socketId}) => {};
+
+        //sockets handling for events
+        socket.on(SOCKET_EVENTS.ROOM_USERS, handleUsers);
+        socket.on(SOCKET_EVENTS.JOIN_ROOM, handleJoined);
+        socket.on(SOCKET_EVENTS.LEAVE_ROOM, handleLeft);
+
+        return () => {
+            socket.emit(SOCKET_EVENTS, LEAVE_ROOM);
+
+            socket.off(SOCKET_EVENTS, ROOM_USERS, handleUsers);
+            socket.off(SOCKET_EVENTS, USERS_JOINED, handleJoined);
+            socket.off(SOCKET_EVENTS, USERS_LEFT, handleLeft);
+        };
+    }, []);
     return (
         <div className={styles.meetingContainer}>
             <header>
